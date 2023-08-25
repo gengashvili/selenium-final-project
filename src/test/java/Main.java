@@ -6,6 +6,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -38,7 +39,7 @@ public class Main {
         List<WebElement> moviesList;
         WebElement firstMovie;
         WebElement buyButton;
-        WebElement cinemasContainer;
+        WebElement cinemasContainer = null;
         List<WebElement> cinemas;
 
 
@@ -56,7 +57,6 @@ public class Main {
             buyButton.click();
 
             cinemasContainer = driver.findElement(By.xpath("//div[contains(@class, 'all-cinemas')]"));
-
             cinemas = cinemasContainer.findElements(By.xpath("./ul[contains(@class, 'cinema-tabs')]/li"));
 
             for (WebElement cinema: cinemas) {
@@ -73,11 +73,35 @@ public class Main {
             }
         }
 
+        WebElement cookieButton = driver.findElement(By.className("acceptCookie"));
+        cookieButton.click();
+
+        List<WebElement> cinemasOptions = cinemasContainer.findElements(By.xpath("./div[@aria-hidden = 'false']/div/div[@aria-hidden = 'false']"));
+
+        //Check that only ‘კავეა ისთ ფოინთი’ options are returned
+        for (WebElement cinemaOption : cinemasOptions) {
+            String cinemaTitle = cinemaOption.findElement(By.xpath("./a/p[contains(@class, 'cinema-title')]")).getText();
+            Assert.assertEquals(cinemaTitle,"კავეა ისთ ფოინთი");
+        }
+
+        List<WebElement> seanseDates = cinemasContainer.findElements(By.xpath("./div[@aria-hidden = 'false']/div/ul[@role = 'tablist']/li"));
+
+        WebElement lastSeanseDate = seanseDates.get(seanseDates.size() - 1);
+        lastSeanseDate.click();
+
+        // div - ები იცვლება თარიღის ცვლილებასთან ერთად და  lastSeanseDate.click() - შემდეგ სიას განახლება სჭირდება რადგან ვალიდური ელემენტები წამოიღოს
+        cinemasOptions = cinemasContainer.findElements(By.xpath("./div[@aria-hidden = 'false']/div/div[@aria-hidden = 'false']"));
+
+        WebElement lastCinemaOption = cinemasOptions.get(cinemasOptions.size() - 1);
+        lastCinemaOption.click();
+
+
+
 
     }
 
     @AfterMethod
     public void tearDown() {
-        driver.quit();
+        //driver.quit();
     }
 }
