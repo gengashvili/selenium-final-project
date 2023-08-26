@@ -5,24 +5,24 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import util.FindMovie;
 import util.Helper;
 import util.Register;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Main {
     private WebDriver driver;
     private WebDriverWait wait;
     private Actions actions;
+    private Helper helper;
+    private FindMovie findMovie;
+
 
     @BeforeMethod
     public void setUp() {
@@ -30,8 +30,10 @@ public class Main {
         this.driver = new ChromeDriver();
         driver.manage().window().maximize();
 
-        this.wait = new WebDriverWait(driver, 15);
+        this.wait = new WebDriverWait(driver, 25); // 25 წამი დიდი დრო ჩანს, მაგრამ საიტი ნელა მუშაობს:)
         this.actions = new Actions(driver);
+        this.helper = new Helper(driver,wait);
+        this.findMovie = new FindMovie(driver, wait, actions);
     }
 
 
@@ -39,49 +41,12 @@ public class Main {
     public void testSwoop() {
             driver.get("https://www.swoop.ge/");
 
-            WebElement movieLink = driver.findElement(By.linkText("კინო"));
-            movieLink.click();
+            helper.clickElement(By.linkText("კინო"));
 
-            List<WebElement> moviesList;
-            WebElement movie;
-            WebElement buyButton;
-            WebElement cinemasContainer = null;
-            List<WebElement> cinemas;
+            // ეს მოძების ისეთ ფილმს რომლის კინოეთეატრების ჩამონათვალში კავეა ისთ ფოინთია და დააბრუნებს ზოგადად კინოთეატრების wrapper ელემენტს სამომავლო ინტერაქციისთვის
+            WebElement cinemasContainer = findMovie.byCinemaName("კავეა ისთ ფოინთი");
 
-
-            boolean foundCaveaEastPoint = false;
-            int movieIndex = 0;
-            while (!foundCaveaEastPoint) {
-                moviesList = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@class='movies-deal']")));
-                movie = moviesList.get(movieIndex);
-
-                wait.until(ExpectedConditions.visibilityOf(movie));
-                actions.moveToElement(movie).perform();
-
-                buyButton = movie.findElement(By.xpath(".//div[@class='cinema-hover']/a[div[@class='info-cinema-ticket']]"));
-                wait.until(ExpectedConditions.elementToBeClickable(buyButton));
-                buyButton.click();
-
-                cinemasContainer = driver.findElement(By.xpath("//div[contains(@class, 'all-cinemas')]"));
-                cinemas = cinemasContainer.findElements(By.xpath("./ul[contains(@class, 'cinema-tabs')]/li"));
-
-                for (WebElement cinema : cinemas) {
-                    if (Objects.equals(cinema.getText(), "კავეა ისთ ფოინთი")) {
-                        cinema.click();
-                        foundCaveaEastPoint = true;
-                        break;
-                    }
-                }
-
-                if (!foundCaveaEastPoint) {
-                    driver.navigate().back();
-                    movieIndex++;
-                }
-            }
-
-
-            WebElement cookieButton = driver.findElement(By.className("acceptCookie"));
-            cookieButton.click();
+            helper.clickElement(By.className("acceptCookie"));
 
             List<WebElement> cinemasOptions = cinemasContainer.findElements(By.xpath("./div[@aria-hidden = 'false']/div/div[@aria-hidden = 'false']"));
 
@@ -115,31 +80,31 @@ public class Main {
             // Check in opened popup that movie name, cinema and datetime is valid
             Assert.assertEquals(movieTitle, popUpMovieTitle, "movieTitle and popUpMovieTitle are not equal");
             Assert.assertEquals(cinemaTitle, popUpCinemaTitle, "cinemaTitle and popUpCinemaTitle are not equal");
-            Assert.assertEquals(Helper.splitDate(dateTime), Helper.splitDate(popUpDateTime), "dateTime and popUoDateTime are not equal");
+            Assert.assertEquals(helper.splitDate(dateTime), helper.splitDate(popUpDateTime), "dateTime and popUoDateTime are not equal");
 
 
             List<WebElement> vacantPlaces = driver.findElements(By.xpath("//div[@class = 'seat free']"));
             vacantPlaces.get(0).click();
 
-            WebElement registerLink = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("register")));
-            registerLink.click();
+            helper.clickElement(By.className("register"));
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("registertabs")));
 
             Register register = new Register(driver);
 
-            register.inputText(By.id("pFirstName"), "giorgi");
-            register.inputText(By.id("pLastName"), "gengashvili");
-            register.inputText(By.id("pEmail"), "wrong email");
-            register.inputText(By.id("pPhone"), "25 60 60");
-            register.inputText(By.id("pDateBirth"), "23-08-2002");
-            register.selectDropDown(By.id("pGender"),"1");
-            register.inputText(By.id("pPassword"), "password");
-            register.inputText(By.id("pConfirmPassword"), "password");
+            register.inputText(By.id("pFirstName"), "giorgi"); //enter first name
+            register.inputText(By.id("pLastName"), "gengashvili"); //enter last name
+            register.inputText(By.id("pEmail"), "wrong email"); //enter email
+            register.inputText(By.id("pPhone"), "25 60 60"); //enter phone number
+            register.inputText(By.id("pDateBirth"), "23-08-2002"); //enter birthday date
+            register.selectDropDown(By.id("pGender"),"1"); //choose gender
+            register.inputText(By.id("pPassword"), "password"); //enter password
+            register.inputText(By.id("pConfirmPassword"), "password"); //enter confirm password
 
             register.clickButton(By.id("pIsAgreeTerns"));
             register.clickButton(By.xpath("//input[@type = 'button' and @value = 'რეგისტრაცია']"));
 
+            //check that error message ‘მეილის ფორმატი არასწორია!' is appear
             register.checkErrorMesssage();
 
 
@@ -148,6 +113,6 @@ public class Main {
 
     @AfterMethod
     public void tearDown() {
-        //driver.quit();
+        driver.quit();
     }
 }
