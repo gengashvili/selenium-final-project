@@ -3,13 +3,12 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import util.FindMovie;
 import util.Helper;
 import util.Register;
@@ -25,9 +24,23 @@ public class Main {
 
 
     @BeforeMethod
-    public void setUp() {
-        WebDriverManager.chromedriver().setup();
-        this.driver = new ChromeDriver();
+    @Parameters("browser")
+    public void setUp(@Optional("chrome") String browser) throws Exception {
+
+        if (browser.equalsIgnoreCase("chrome")) {
+
+            WebDriverManager.chromedriver().setup();
+            driver = new ChromeDriver();
+
+        } else if (browser.equalsIgnoreCase("edge")) {
+
+            WebDriverManager.edgedriver().setup();
+            driver = new EdgeDriver();
+
+        } else {
+            throw new Exception("Invalid browser name: " + browser);
+        }
+
         driver.manage().window().maximize();
 
         this.wait = new WebDriverWait(driver, 25); // 25 წამი დიდი დრო ჩანს, მაგრამ საიტი ნელა მუშაობს:)
