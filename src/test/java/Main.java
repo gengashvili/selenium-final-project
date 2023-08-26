@@ -12,6 +12,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import util.Helper;
+import util.Register;
 
 import java.util.List;
 import java.util.Objects;
@@ -125,31 +126,21 @@ public class Main {
 
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("registertabs")));
 
-            WebElement nameInput = driver.findElement(By.id("pFirstName"));
-            WebElement lastNameInput = driver.findElement(By.id("pLastName"));
-            WebElement emailInput = driver.findElement(By.id("pEmail"));
-            WebElement numberInput = driver.findElement(By.id("pPhone"));
-            WebElement birthdayDateInput = driver.findElement(By.id("pDateBirth"));
-            WebElement genderInput = driver.findElement(By.id("pGender"));
-            WebElement passwordInput = driver.findElement(By.id("pPassword"));
-            WebElement confirmPasswordInput = driver.findElement(By.id("pConfirmPassword"));
-            WebElement termsAndConditionsCheckBox = driver.findElement(By.id("pIsAgreeTerns"));
+            Register register = new Register(driver);
 
-            nameInput.sendKeys("giorgi");
-            lastNameInput.sendKeys("gengashvili");
-            emailInput.sendKeys("wrong mail");
-            numberInput.sendKeys("25 60 60"); // ავეჯის გადაზიდვის სერვისი :)
-            birthdayDateInput.sendKeys("08-23-2002");
-            new Select(genderInput).selectByValue("1");
-            passwordInput.sendKeys("password");
-            confirmPasswordInput.sendKeys("password");
-            termsAndConditionsCheckBox.click();
+            register.inputText(By.id("pFirstName"), "giorgi");
+            register.inputText(By.id("pLastName"), "gengashvili");
+            register.inputText(By.id("pEmail"), "wrong email");
+            register.inputText(By.id("pPhone"), "25 60 60");
+            register.inputText(By.id("pDateBirth"), "23-08-2002");
+            register.selectDropDown(By.id("pGender"),"1");
+            register.inputText(By.id("pPassword"), "password");
+            register.inputText(By.id("pConfirmPassword"), "password");
 
-            WebElement registerButton = driver.findElement(By.xpath("//input[@type = 'button' and @value = 'რეგისტრაცია']"));
-            registerButton.click();
+            register.clickButton(By.id("pIsAgreeTerns"));
+            register.clickButton(By.xpath("//input[@type = 'button' and @value = 'რეგისტრაცია']"));
 
-            WebElement errorMessage = driver.findElement(By.id("physicalInfoMassage"));
-            Assert.assertEquals(errorMessage.getText(), "მეილის ფორმატი არასწორია!");
+            register.checkErrorMesssage();
 
 
     }
@@ -157,6 +148,6 @@ public class Main {
 
     @AfterMethod
     public void tearDown() {
-        driver.quit();
+        //driver.quit();
     }
 }
